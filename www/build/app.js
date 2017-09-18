@@ -18,4 +18,4 @@
     x = document.createElement('script');
     x.src = window.customElements ? appCore : appCoreEs5;
     document.head.appendChild(x);
-})(window, document, "App","build/app/app.core.js","build/app/app.core.ce.js",[["DEMO-PAYMENT","demo-payment",{"$":"demo-payment"}],["ST-PAYMENT","demo-payment",{"$":"demo-payment"},[["callback",1],["details",1],["methodData",1],["options",1]]]]);
+})(window, document, "App","build/app/app.core.js","build/app/app.core.ce.js",[["DEMO-FETCH","demo-fetch"],["ST-FETCH","demo-fetch",0,[["headers",1],["method",1],["url",1]]]]);

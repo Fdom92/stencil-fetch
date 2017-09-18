@@ -2,33 +2,24 @@
   "namespace": "App",
   "components": [
     [
-      "DEMO-PAYMENT",
-      "demo-payment",
-      {
-        "$": "demo-payment"
-      }
+      "DEMO-FETCH",
+      "demo-fetch"
     ],
     [
-      "ST-PAYMENT",
-      "demo-payment",
-      {
-        "$": "demo-payment"
-      },
+      "ST-FETCH",
+      "demo-fetch",
+      0,
       [
         [
-          "callback",
+          "headers",
           1
         ],
         [
-          "details",
+          "method",
           1
         ],
         [
-          "methodData",
-          1
-        ],
-        [
-          "options",
+          "url",
           1
         ]
       ]

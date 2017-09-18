@@ -1,4 +1,4 @@
-import { Component } from '@stencil/core';
+import { Component, State } from '@stencil/core';
 
 
 @Component({
@@ -6,10 +6,18 @@ import { Component } from '@stencil/core';
 })
 export class DemoFetch {
 
+    @State() method  : any = 'GET';
+    @State() url     : any = 'www.google.es';
+    @State() headers : any = {};
+
     render() {
         return (
             <div>
-                <st-fetch>
+                <st-fetch
+                method={this.method}
+                url={this.url}
+                headers={this.headers}
+                >
                 </st-fetch>
             </div>
         );
