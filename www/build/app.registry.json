@@ -1,0 +1,40 @@
+{
+  "namespace": "App",
+  "components": [
+    [
+      "DEMO-PAYMENT",
+      "demo-payment",
+      {
+        "$": "demo-payment"
+      }
+    ],
+    [
+      "ST-PAYMENT",
+      "demo-payment",
+      {
+        "$": "demo-payment"
+      },
+      [
+        [
+          "callback",
+          1
+        ],
+        [
+          "details",
+          1
+        ],
+        [
+          "methodData",
+          1
+        ],
+        [
+          "options",
+          1
+        ]
+      ]
+    ]
+  ],
+  "loader": "app.js",
+  "core": "app/app.core.js",
+  "coreEs5": "app/app.core.ce.js"
+}

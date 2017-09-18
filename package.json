@@ -1,0 +1,30 @@
+{
+  "name": "st-fetch",
+  "version": "0.0.1",
+  "description": "Web Component built with Stencil to use Fetch API",
+  "scripts": {
+    "build": "stencil build",
+    "dev": "sd concurrent \"stencil build --dev --watch\" \"stencil-dev-server\" ",
+    "test": "stencil build --watch",
+    "serve": "stencil-dev-server",
+    "start": "npm run dev",
+    "publish": "npm run build && node scripts/publish.js"
+  },
+  "dependencies": {
+    "@stencil/core": "0.0.4"
+  },
+  "devDependencies": {
+    "@stencil/dev-server": "0.0.16",
+    "@stencil/utils": "0.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fdom92/stencil-fetch.git"
+  },
+  "author": "Fernando del olmo martin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Fdom92/stencil-fetch"
+  },
+  "homepage": "https://github.com/Fdom92/stencil-fetch"
+}
