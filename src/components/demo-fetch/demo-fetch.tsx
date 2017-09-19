@@ -1,4 +1,4 @@
-import { Component, State } from '@stencil/core';
+import { Component, State, Listen } from '@stencil/core';
 
 
 @Component({
@@ -6,9 +6,19 @@ import { Component, State } from '@stencil/core';
 })
 export class DemoFetch {
 
-    @State() method  : any = 'GET';
-    @State() url     : any = 'www.google.es';
-    @State() headers : any = {};
+    @State() method  : string = 'GET';
+    @State() url     : string = 'https://jsonplaceholder.typicode.com/posts';
+    @State() headers : object = {};
+
+    @Listen('fetchResolved')
+    fetchResolvedHandler(data) {
+        console.log('Received from st-fetch: ', data);
+    }
+
+    @Listen('fetchError')
+    fetchErrorHandler(data) {
+        console.log('Received from st-fetch: ', data);
+    }
 
     render() {
         return (

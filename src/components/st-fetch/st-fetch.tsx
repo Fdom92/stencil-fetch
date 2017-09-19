@@ -1,4 +1,4 @@
-import { Component, Prop } from '@stencil/core';
+import { Component, Prop, EventEmitter, Event } from '@stencil/core';
 
 
 @Component({
@@ -6,9 +6,13 @@ import { Component, Prop } from '@stencil/core';
 })
 export class StFetch {
 
-  @Prop() method  : any;
-  @Prop() url     : any;
-  @Prop() headers : any;
+  @Prop() headers     : object;
+  @Prop() method      : any;
+  @Prop() url         : string;
+  @Prop() buttonLabel : string = 'Fetch';
+
+  @Event() fetchResolved : EventEmitter;
+  @Event() fetchError    : EventEmitter;
 
   doFetch () {
     let options = {
@@ -17,13 +21,18 @@ export class StFetch {
     };
 
     if(self.fetch) {
-      let request = new Request('www.google.es', options);
+      let request = new Request(this.url, options);
 
-      fetch(request).then(function(response) {
-        return response;
-      });
+      fetch(request)
+        .then(function(response) {
+          this.fetchResolved.emit(response);
+        }.bind(this))
+        .catch(function(err) {
+          this.fetchError.emit(err);
+        }.bind(this));
     } else {
         // ¿do something with XMLHttpRequest?
+        console.error('Fetch API not supported');
     }
 
   }
@@ -32,7 +41,7 @@ export class StFetch {
     return (
       <div>
         <button onClick={() => this.doFetch()}>
-          <span>Fetch</span>
+          <span>{this.buttonLabel}</span>
         </button>
       </div>
     );

@@ -3,7 +3,19 @@
   "components": [
     [
       "DEMO-FETCH",
-      "demo-fetch"
+      "demo-fetch",
+      0,
+      0,
+      [
+        [
+          "fetchError",
+          "fetchErrorHandler"
+        ],
+        [
+          "fetchResolved",
+          "fetchResolvedHandler"
+        ]
+      ]
     ],
     [
       "ST-FETCH",
@@ -11,7 +23,7 @@
       0,
       [
         [
-          "headers",
+          "buttonLabel",
           1
         ],
         [
