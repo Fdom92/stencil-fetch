@@ -1,4 +1,4 @@
-import { Component, Prop, EventEmitter, Event } from '@stencil/core';
+import { Component, Prop, EventEmitter, Event, State } from '@stencil/core';
 
 
 @Component({
@@ -6,39 +6,42 @@ import { Component, Prop, EventEmitter, Event } from '@stencil/core';
 })
 export class StFetch {
 
-  @Prop() headers     : object;
-  @Prop() method      : any;
+  @Prop() headers     : object = {};
+  @Prop() method      : string = 'GET';
   @Prop() url         : string;
   @Prop() buttonLabel : string = 'Fetch';
 
   @Event() fetchResolved : EventEmitter;
   @Event() fetchError    : EventEmitter;
 
-  doFetch () {
-    let options = {
-      method: this.method,
-      headers: this.headers
-    };
+  @State() available : boolean = false;
+  @State() request   : any;
 
+  componentDidLoad() {
     if(self.fetch) {
-      let request = new Request(this.url, options);
+      this.available = true;
+      let options = {
+        method: this.method,
+        headers: new Headers(this.headers)
+      };
 
-      fetch(request)
-        .then(function(response) {
-          this.fetchResolved.emit(response);
-        }.bind(this))
-        .catch(function(err) {
-          this.fetchError.emit(err);
-        }.bind(this));
-    } else {
-        // ¿do something with XMLHttpRequest?
-        console.error('Fetch API not supported');
+      this.request = new Request(this.url, options);
     }
+  }
 
+  doFetch () {
+    fetch(this.request)
+      .then(function(response) {
+        this.fetchResolved.emit(response);
+      }.bind(this))
+      .catch(function(err) {
+        this.fetchError.emit(err);
+      }.bind(this));
   }
 
   render() {
-    return (
+    return this.available &&
+    (
       <div>
         <button onClick={() => this.doFetch()}>
           <span>{this.buttonLabel}</span>

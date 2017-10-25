@@ -1,6 +1,5 @@
 /*! Built with http://stenciljs.com */
-
-(function (window, document, appNamespace, appCore, appCoreEs5, components, x) {
+(function (window, document, appNamespace, publicPath, appCore, appCorePolyfilled, components, x, i) {
     'use strict';
     // create global namespace if it doesn't already exist
 
@@ -12,10 +11,22 @@
     x.innerHTML = (components.map(function (c) {
         return c[0];
     }).join(',') + '{visibility:hidden}.💎{visibility:inherit}').toLowerCase();
-    x.innerHTML += 'ion-app:not(.💎){display:none}';
     document.head.insertBefore(x, document.head.firstChild);
-    // request the core file this browser needs
+    // get this current script
+    appNamespace = appNamespace.toLowerCase();
+    x = document.scripts;
+    for (i = x.length - 1; i >= 0; i--) {
+        if (x[i].src && x[i].src.split('/').pop() === appNamespace + '.js') {
+            publicPath = x[i].src.replace(appNamespace + '.js', appNamespace + '/');
+            break;
+        }
+    }
+    // request the core this browser needs
+    // test for native support of custom elements and fetch
+    // if either of those are not supported, then use the core w/ polyfills
     x = document.createElement('script');
-    x.src = window.customElements ? appCore : appCoreEs5;
+    x.src = publicPath + (window.customElements && window.fetch ? appCore : appCorePolyfilled);
+    x.setAttribute('data-path', publicPath);
+    x.setAttribute('data-core', appCore);
     document.head.appendChild(x);
-})(window, document, "App","build/app/app.core.js","build/app/app.core.ce.js",[["DEMO-FETCH","demo-fetch",0,0,[["fetchError","fetchErrorHandler"],["fetchResolved","fetchResolvedHandler"]]],["ST-FETCH","demo-fetch",0,[["buttonLabel",1],["method",1],["url",1]]]]);
+})(window, document, "App","/build/app/","app.core.js","app.core.pf.js",[["ST-FETCH","st-fetch",0,[["buttonLabel",1],["method",1],["url",1]]]]);

@@ -2,24 +2,8 @@
   "namespace": "App",
   "components": [
     [
-      "DEMO-FETCH",
-      "demo-fetch",
-      0,
-      0,
-      [
-        [
-          "fetchError",
-          "fetchErrorHandler"
-        ],
-        [
-          "fetchResolved",
-          "fetchResolvedHandler"
-        ]
-      ]
-    ],
-    [
       "ST-FETCH",
-      "demo-fetch",
+      "st-fetch",
       0,
       [
         [
@@ -39,5 +23,5 @@
   ],
   "loader": "app.js",
   "core": "app/app.core.js",
-  "coreEs5": "app/app.core.ce.js"
+  "corePolyfilled": "app/app.core.pf.js"
 }

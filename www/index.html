@@ -1,4 +1,6 @@
-<!DOCTYPE html><html dir="ltr" lang="en"><head>
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
   <meta charset="utf-8">
   <title>Fetch API</title>
   <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
@@ -6,29 +8,24 @@
   <meta name="msapplication-tap-highlight" content="no">
   <meta name="theme-color" content="black">
 
-  <script src="https://storage.googleapis.com/prshim/v1/payment-shim.js"></script>
-
-  
+  <script src="build/app.js"></script>
 
 </head>
-<body> <demo-fetch ssrv="0" class="💎"><div ssrc="0.0"><st-fetch ssrc="0.0." ssrv="1" class="💎"><div ssrc="1.0"><button ssrc="1.0"><span ssrc="1.0"><!--s.1.0-->Fetch<!--/--></span></button></div></st-fetch></div></demo-fetch> <script>/*! Built with http://stenciljs.com */
+<body>
 
-(function (window, document, appNamespace, appCore, appCoreEs5, components, x) {
-    'use strict';
-    // create global namespace if it doesn't already exist
+    <st-fetch url="https://jsonplaceholder.typicode.com/posts"></st-fetch>
 
-    (window[appNamespace] = window[appNamespace] || {}).components = components = components || [];
-    // auto hide components until they been fully hydrated
-    // reusing the "x" variable from the args for funzies
-    x = document.createElement('style');
-    x.setAttribute('data-styles', '');
-    x.innerHTML = (components.map(function (c) {
-        return c[0];
-    }).join(',') + '{visibility:hidden}.💎{visibility:inherit}').toLowerCase();
-    x.innerHTML += 'ion-app:not(.💎){display:none}';
-    document.head.insertBefore(x, document.head.firstChild);
-    // request the core file this browser needs
-    x = document.createElement('script');
-    x.src = window.customElements ? appCore : appCoreEs5;
-    document.head.appendChild(x);
-})(window, document, "App","build/app/app.core.js","build/app/app.core.ce.js",[["DEMO-FETCH","demo-fetch",0,0,[["fetchError","fetchErrorHandler"],["fetchResolved","fetchResolvedHandler"]]],["ST-FETCH","demo-fetch",0,[["buttonLabel",1],["method",1],["url",1]]]]);</script></body></html>
+
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      // auto-unregister service worker during dev mode
+      navigator.serviceWorker.ready.then(registration => {
+        registration.unregister().then(() => {
+          location.reload(true);
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

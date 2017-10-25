@@ -11,7 +11,7 @@
     "publish": "npm run build && node scripts/publish.js"
   },
   "dependencies": {
-    "@stencil/core": "0.0.4"
+    "@stencil/core": "0.0.5"
   },
   "devDependencies": {
     "@stencil/dev-server": "0.0.16",

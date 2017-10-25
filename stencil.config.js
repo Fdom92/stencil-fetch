@@ -1,6 +1,6 @@
 exports.config = {
   bundles: [
-    { components: ['st-fetch', 'demo-fetch'] }
+    { components: ['st-fetch'] }
   ]
 };
 

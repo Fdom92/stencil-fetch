@@ -1,6 +1,6 @@
 /*! Built with http://stenciljs.com */
-
 (function(Context,appNamespace,publicPath){"use strict";
+var s=document.querySelector("script[data-core='app.core.js'][data-path]");if(s){publicPath=s.getAttribute('data-path');}
 (function (window, document, Context, appNamespace, publicPath) {
     "use strict";
 
@@ -68,7 +68,7 @@
      * Member Types
      */
     var MEMBER_PROP = 1;
-    var MEMBER_PROP_STATE = 2;
+    var MEMBER_PROP_MUTABLE = 2;
     var MEMBER_PROP_CONTEXT = 3;
     var MEMBER_PROP_CONNECT = 4;
     var MEMBER_STATE = 5;
@@ -94,7 +94,6 @@
      */
     var PRIORITY_HIGH = 3;
 
-    var PRIORITY_LOW = 1;
     /**
      * Slot Meta
      */
@@ -104,8 +103,8 @@
     /**
      * SSR Attribute Names
      */
-    var SSR_VNODE_ID = 'ssrv';
-    var SSR_CHILD_ID = 'ssrc';
+    var SSR_VNODE_ID = 'data-ssrv';
+    var SSR_CHILD_ID = 'data-ssrc';
     /**
      * Node Types
      */
@@ -119,7 +118,11 @@
         'enter': 13,
         'escape': 27,
         'space': 32,
-        'tab': 9
+        'tab': 9,
+        'left': 37,
+        'up': 38,
+        'right': 39,
+        'down': 40
     };
     /**
      * CSS class that gets added to the host element
@@ -141,9 +144,10 @@
     var QUEUE_EVENTS_ERROR = 2;
     var WILL_LOAD_ERROR = 3;
     var DID_LOAD_ERROR = 4;
-    var INIT_INSTANCE_ERROR = 5;
-    var RENDER_ERROR = 6;
-    var INITIAL_LOAD_ERROR = 7;
+    var WILL_UPDATE_ERROR = 5;
+    var DID_UPDATE_ERROR = 6;
+    var INIT_INSTANCE_ERROR = 7;
+    var RENDER_ERROR = 8;
 
     function initElementListeners(plt, elm) {
         // so the element was just connected, which means it's in the DOM
@@ -313,11 +317,10 @@
      */
     var stack = [];
     function h(nodeName, vnodeData, child) {
-        var children = void 0,
-            lastSimple = void 0,
-            simple = void 0,
-            i = void 0;
-        for (i = arguments.length; i-- > 2;) {
+        var children;
+        var lastSimple = false;
+        var simple = false;
+        for (var i = arguments.length; i-- > 2;) {
             stack.push(arguments[i]);
         }
         while (stack.length) {
@@ -347,7 +350,17 @@
             // data object was provided
             vnode.vattrs = vnodeData.a;
             vnode.vprops = vnodeData.p;
-            vnode.vclass = vnodeData.c;
+            if (typeof vnodeData.c === 'string') {
+                vnode.vclass = {};
+                var cssClasses = vnodeData.c.split(' ');
+                for (i = 0; i < cssClasses.length; i++) {
+                    if (cssClasses[i]) {
+                        vnode.vclass[cssClasses[i]] = true;
+                    }
+                }
+            } else {
+                vnode.vclass = vnodeData.c;
+            }
             vnode.vstyle = vnodeData.s;
             vnode.vlisteners = vnodeData.o;
             vnode.vkey = vnodeData.k;
@@ -452,6 +465,9 @@
         // compiler has already figured out if this component has slots or not
         // if the component doesn't even have slots then we'll skip over all of this code
         var childNodes = elm.childNodes;
+        if (slotMeta && !elm.$defaultHolder) {
+            domApi.$insertBefore(elm, elm.$defaultHolder = domApi.$createComment(''), childNodes[0]);
+        }
         if (slotMeta === HAS_NAMED_SLOTS) {
             // looks like this component has named slots
             // so let's loop through each of the childNodes to the host element
@@ -826,7 +842,7 @@
      *
      * Modified for Stencil's renderer and slot projection
      */
-    function createRenderer(plt, domApi) {
+    function createRendererPatch(plt, domApi) {
         // createRenderer() is only created once per app
         // the patch() function which createRenderer() returned is the function
         // which gets called numerous times by each component
@@ -896,6 +912,7 @@
                             if (isDef(ssrId) && childNode.nodeType === 3) {
                                 // SSR ONLY: add the text node's end comment
                                 domApi.$appendChild(elm, domApi.$createComment('/'));
+                                domApi.$appendChild(elm, domApi.$createTextNode(' '));
                             }
                         }
                     }
@@ -904,6 +921,7 @@
             return vnode.elm;
         }
         function addVnodes(parentElm, before, vnodes, startIdx, endIdx) {
+            var containerElm = parentElm.$defaultHolder && parentElm.$defaultHolder.parentNode || parentElm;
             var childNode = void 0;
             for (; startIdx <= endIdx; ++startIdx) {
                 var vnodeChild = vnodes[startIdx];
@@ -915,7 +933,7 @@
                     }
                     if (isDef(childNode)) {
                         vnodeChild.elm = childNode;
-                        domApi.$insertBefore(parentElm, childNode, before);
+                        domApi.$insertBefore(containerElm, childNode, before);
                     }
                 }
             }
@@ -1115,16 +1133,15 @@
     function createQueueClient(domCtrl, now) {
         var raf = domCtrl.raf;
         var highPromise = Promise.resolve();
-        var highCallbacks = [];
-        var mediumCallbacks = [];
-        var lowCallbacks = [];
+        var highPriority = [];
+        var lowPriority = [];
         var resolvePending = false;
         var rafPending = false;
         function doHighPriority() {
             // holy geez we need to get this stuff done and fast
             // all high priority callbacks should be fired off immediately
-            while (highCallbacks.length > 0) {
-                highCallbacks.shift()();
+            while (highPriority.length > 0) {
+                highPriority.shift()();
             }
             resolvePending = false;
         }
@@ -1132,18 +1149,11 @@
             var start = now();
             // always run all of the high priority work if there is any
             doHighPriority();
-            while (mediumCallbacks.length > 0 && now() - start < 40) {
-                mediumCallbacks.shift()();
-            }
-            if (mediumCallbacks.length === 0) {
-                // we successfully drained the medium queue or the medium queue is empty
-                // so now let's drain the low queue with our remaining time
-                while (lowCallbacks.length > 0 && now() - start < 40) {
-                    lowCallbacks.shift()();
-                }
+            while (lowPriority.length > 0 && now() - start < 40) {
+                lowPriority.shift()();
             }
             // check to see if we still have work to do
-            if (rafPending = mediumCallbacks.length > 0 || lowCallbacks.length > 0) {
+            if (rafPending = lowPriority.length > 0) {
                 // everyone just settle down now
                 // we already don't have time to do anything in this callback
                 // let's throw the next one in a requestAnimationFrame
@@ -1157,10 +1167,10 @@
             // always force a bunch of medium callbacks to run, but still have
             // a throttle on how many can run in a certain time
             var start = now();
-            while (mediumCallbacks.length > 0 && now() - start < 4) {
-                mediumCallbacks.shift()();
+            while (lowPriority.length > 0 && now() - start < 4) {
+                lowPriority.shift()();
             }
-            if (rafPending = mediumCallbacks.length > 0 || lowCallbacks.length > 0) {
+            if (rafPending = lowPriority.length > 0) {
                 // still more to do yet, but we've run out of time
                 // let's let this thing cool off and try again in the next ric
                 raf(doWork);
@@ -1169,20 +1179,16 @@
         function add(cb, priority) {
             if (priority === PRIORITY_HIGH) {
                 // uses Promise.resolve() for next tick
-                highCallbacks.push(cb);
+                highPriority.push(cb);
                 if (!resolvePending) {
                     // not already pending work to do, so let's tee it up
                     resolvePending = true;
                     highPromise.then(doHighPriority);
                 }
             } else {
-                if (priority === PRIORITY_LOW) {
-                    lowCallbacks.push(cb);
-                } else {
-                    // defaults to medium priority
-                    // uses requestIdleCallback
-                    mediumCallbacks.push(cb);
-                }
+                // defaults to low priority
+                // uses requestAnimationFrame
+                lowPriority.push(cb);
                 if (!rafPending) {
                     // not already pending work to do, so let's tee it up
                     rafPending = true;
@@ -1193,21 +1199,6 @@
         return {
             add: add,
             flush: flush
-        };
-    }
-
-    function getNowFunction(window) {
-        // performance.now() polyfill
-        // required for client-side only
-        var perf = window.performance = window.performance || {};
-        if (!perf.now) {
-            var appStart = Date.now();
-            perf.now = function () {
-                return Date.now() - appStart;
-            };
-        }
-        return function now() {
-            return perf.now();
         };
     }
 
@@ -1396,18 +1387,21 @@
     function disconnectedCallback(plt, elm) {
         // only disconnect if we're not temporarily disconnected
         // tmpDisconnected will happen when slot nodes are being relocated
-        if (!plt.tmpDisconnected) {
+        if (!plt.tmpDisconnected && isDisconnected(elm)) {
             // ok, let's officially destroy this thing
             // set this to true so that any of our pending async stuff
             // doesn't continue since we already decided to destroy this node
             elm._hasDestroyed = true;
+            // double check that we've informed the ancestor host elements
+            // that they're good to go and loaded (cuz this one is on its way out)
+            propagateElementLoaded(elm);
             // call instance Did Unload and destroy instance stuff
             // if we've created an instance for this
             var instance = elm.$instance;
             if (instance) {
                 // call the user's componentDidUnload if there is one
                 instance.componentDidUnload && instance.componentDidUnload();
-                elm.$instance = instance.__el = instance.__values = instance.__values.__propWillChange = instance.__values.__propDidChange = null;
+                elm.$instance = instance.__el = elm.$defaultHolder = instance.__values = instance.__values.__propWillChange = instance.__values.__propDidChange = null;
             }
             // detatch any event listeners that may have been added
             // this will also set _listeners to null if there are any
@@ -1422,8 +1416,17 @@
             // set it all to null to ensure we forget references
             // and reset values incase this node gets reused somehow
             // (possible that it got disconnected, but the node was reused)
-            elm._root = elm._vnode = elm._ancestorHostElement = elm._activelyLoadingChildren = elm._hasConnected = elm._isQueuedForUpdate = elm._hasLoaded = null;
+            elm._root = elm._vnode = elm._ancestorHostElement = elm._activelyLoadingChildren = elm._hasConnected = elm._isQueuedForUpdate = elm._hasLoaded = elm._observer = null;
         }
+    }
+    function isDisconnected(elm) {
+        while (elm) {
+            if (elm.parentElement === null) {
+                return elm.tagName !== 'HTML';
+            }
+            elm = elm.parentElement;
+        }
+        return false;
     }
 
     function initEventEmitters(plt, componentEvents, instance) {
@@ -1441,6 +1444,48 @@
                     }
                 };
             });
+        }
+    }
+
+    /**
+     * Create a mutation observer for the elm.
+     *
+     * @param plt platform api
+     * @param elm the element to create an observer for
+     */
+    function createMutationObserver(plt, elm) {
+        if (plt.isClient) {
+            var elementReset = createElementReset(plt, elm);
+            elm._observer = new MutationObserver(function (mutations) {
+                mutations.forEach(elementReset);
+            });
+        }
+    }
+    function createElementReset(plt, elm) {
+        return function () {
+            var cmpMeta = plt.getComponentMeta(elm);
+            elm._vnode = null;
+            plt.connectHostElement(elm, cmpMeta.slotMeta);
+            stopObserving(plt, elm);
+            elm._render();
+            startObserving(plt, elm);
+        };
+    }
+    /**
+     * Start the observer that each element has
+     *
+     * @param elm the element to watch
+     */
+    function startObserving(plt, elm) {
+        if (plt.isClient && elm._observer) {
+            return elm._observer.observe(elm, {
+                'childList': true
+            });
+        }
+    }
+    function stopObserving(plt, elm) {
+        if (plt.isClient && elm._observer) {
+            return elm._observer.disconnect();
         }
     }
 
@@ -1462,28 +1507,94 @@
         // this node, so be sure to do nothing if we've already disconnected
         if (!elm._hasDestroyed) {
             var isInitialLoad = !elm.$instance;
+            var userPromise = void 0;
             if (isInitialLoad) {
+                var ancestorHostElement = elm._ancestorHostElement;
+                if (ancestorHostElement && !ancestorHostElement._hasRendered) {
+                    // this is the intial load
+                    // this element has an ancestor host element
+                    // but the ancestor host element has NOT rendered yet
+                    // so let's just cool our jets and wait for the ancestor to render
+                    (ancestorHostElement._onRenderCallbacks = ancestorHostElement._onRenderCallbacks || []).push(function () {
+                        // this will get fired off when the ancestor host element
+                        // finally gets around to rendering its lazy self
+                        update(plt, elm);
+                    });
+                    return;
+                }
                 // haven't created a component instance for this host element yet
                 try {
+                    // create the instance from the user's component class
                     initComponentInstance(plt, elm);
+                    // fire off the user's componentWillLoad method (if one was provided)
+                    // componentWillLoad only runs ONCE, after instance's element has been
+                    // assigned as the host element, but BEFORE render() has been called
+                    try {
+                        if (elm.$instance.componentWillLoad) {
+                            userPromise = elm.$instance.componentWillLoad();
+                        }
+                    } catch (e) {
+                        plt.onError(WILL_LOAD_ERROR, e, elm);
+                    }
                 } catch (e) {
                     plt.onError(INIT_INSTANCE_ERROR, e, elm);
                 }
-            }
-            // if this component has a render function, let's fire
-            // it off and generate a vnode for this
-            try {
-                elm._render(!isInitialLoad);
-            } catch (e) {
-                plt.onError(RENDER_ERROR, e, elm);
-            }
-            if (isInitialLoad) {
+            } else {
+                // already created an instance and this is an update
+                // fire off the user's componentWillUpdate method (if one was provided)
+                // componentWillUpdate runs BEFORE render() has been called
+                // but only BEFORE an UPDATE and not before the intial render
+                // get the returned promise (if one was provided)
                 try {
-                    elm._initLoad();
+                    if (elm.$instance.componentWillUpdate) {
+                        userPromise = elm.$instance.componentWillUpdate();
+                    }
                 } catch (e) {
-                    plt.onError(INITIAL_LOAD_ERROR, e, elm);
+                    plt.onError(WILL_UPDATE_ERROR, e, elm);
                 }
             }
+            if (userPromise && userPromise.then) {
+                // looks like the user return a promise!
+                // let's not actually kick off the render
+                // until the user has resolved their promise
+                userPromise.then(function componentWillLoadResolved() {
+                    renderUpdate(plt, elm, isInitialLoad);
+                });
+            } else {
+                // user never returned a promise so there's
+                // no need to wait on anything, let's do the render now
+                renderUpdate(plt, elm, isInitialLoad);
+            }
+        }
+    }
+    function renderUpdate(plt, elm, isInitialLoad) {
+        // stop the observer so that we do not observe our own changes
+        stopObserving(plt, elm);
+        // if this component has a render function, let's fire
+        // it off and generate a vnode for this
+        try {
+            elm._render(!isInitialLoad);
+            // _hasRendered was just set
+            // _onRenderCallbacks were all just fired off
+        } catch (e) {
+            plt.onError(RENDER_ERROR, e, elm);
+        }
+        // after render we need to start the observer back up.
+        startObserving(plt, elm);
+        try {
+            if (isInitialLoad) {
+                // so this was the initial load i guess
+                elm._initLoad();
+                // componentDidLoad just fired off
+            } else {
+                // fire off the user's componentDidUpdate method (if one was provided)
+                // componentDidUpdate runs AFTER render() has been called
+                // but only AFTER an UPDATE and not after the intial render
+                elm.$instance.componentDidUpdate && elm.$instance.componentDidUpdate();
+            }
+        } catch (e) {
+            // derp
+            plt.onError(DID_UPDATE_ERROR, e, elm);
         }
     }
 
@@ -1536,7 +1647,7 @@
         } else {
             // @Prop() property, so check initial value from the proxy element and instance
             // before we create getters/setters on this same property name
-            // we do this for @Prop(state: true) also
+            // we do this for @Prop({ mutable: true }) also
             var hostAttrValue = elm.getAttribute(attribName);
             if (hostAttrValue !== null) {
                 // looks like we've got an initial value from the attribute
@@ -1601,14 +1712,14 @@
                 queueUpdate(plt, elm);
             }
         }
-        if (memberType === MEMBER_PROP || memberType === MEMBER_PROP_STATE) {
-            // @Prop() and @Prop({ state: true })
+        if (memberType === MEMBER_PROP || memberType === MEMBER_PROP_MUTABLE) {
+            // @Prop() or @Prop({ mutable: true })
             // have both getters and setters on the DOM element
             // @State() getters and setters should not be assigned to the element
             defineProperty(elm, memberName, undefined, getValue, setValue);
         }
-        if (memberType === MEMBER_PROP_STATE || memberType === MEMBER_STATE) {
-            // @Prop({ state: true }) and @State()
+        if (memberType === MEMBER_PROP_MUTABLE || memberType === MEMBER_STATE) {
+            // @Prop({ mutable: true }) or @State()
             // have both getters and setters on the instance
             defineProperty(instance, memberName, undefined, getValue, setValue);
         } else if (memberType === MEMBER_PROP) {
@@ -1638,18 +1749,30 @@
         }
         Object.defineProperty(obj, propertyKey, descriptor);
     }
-    function proxyControllerProp(domApi, controllerComponents, obj, ctrlTag, proxyMethodName) {
-        obj[proxyMethodName] = function () {
-            var orgArgs = arguments;
-            return new Promise(function (resolve) {
-                var ctrlElm = controllerComponents[ctrlTag];
-                if (!ctrlElm) {
-                    ctrlElm = controllerComponents[ctrlTag] = domApi.$createElement(ctrlTag);
-                    domApi.$appendChild(domApi.$body, ctrlElm);
-                }
-                ctrlElm.componentOnReady(function (ctrlElm) {
-                    ctrlElm[proxyMethodName].apply(ctrlElm, orgArgs).then(resolve);
-                });
+    function proxyController(domApi, controllerComponents, ctrlTag) {
+        return {
+            'create': proxyProp(domApi, controllerComponents, ctrlTag, 'create'),
+            'componentOnReady': proxyProp(domApi, controllerComponents, ctrlTag, 'componentOnReady')
+        };
+    }
+    function loadComponent(domApi, controllerComponents, ctrlTag) {
+        return new Promise(function (resolve) {
+            var ctrlElm = controllerComponents[ctrlTag];
+            if (!ctrlElm) {
+                ctrlElm = domApi.$body.querySelector(ctrlTag);
+            }
+            if (!ctrlElm) {
+                ctrlElm = controllerComponents[ctrlTag] = domApi.$createElement(ctrlTag);
+                domApi.$appendChild(domApi.$body, ctrlElm);
+            }
+            ctrlElm.componentOnReady(resolve);
+        });
+    }
+    function proxyProp(domApi, controllerComponents, ctrlTag, proxyMethodName) {
+        return function () {
+            var args = arguments;
+            return loadComponent(domApi, controllerComponents, ctrlTag).then(function (ctrlElm) {
+                return ctrlElm[proxyMethodName].apply(ctrlElm, args);
             });
         };
     }
@@ -1669,22 +1792,15 @@
         }, allClasses);
     }
 
-    function render(plt, elm, isUpdateRender) {
+    function render(plt, elm, cmpMeta, isUpdateRender) {
         var instance = elm.$instance;
-        var cmpMeta = plt.getComponentMeta(elm);
-        if (isUpdateRender) {
-            // fire off the user's componentWillUpdate method (if one was provided)
-            // componentWillUpdate runs BEFORE render() has been called
-            // but only BEFORE an UPDATE and not before the intial render
-            instance.componentWillUpdate && instance.componentWillUpdate();
-        }
         // if this component has a render function, let's fire
         // it off and generate the child vnodes for this host element
         // note that we do not create the host element cuz it already exists
-        var vnodeChildren = instance.render && instance.render();
-        var vnodeHostData = instance.hostData && instance.hostData();
         var hostMeta = cmpMeta.hostMeta;
-        if (vnodeChildren || vnodeHostData || hostMeta) {
+        if (instance.render || instance.hostData || hostMeta) {
+            var vnodeChildren = instance.render && instance.render();
+            var vnodeHostData = instance.hostData && instance.hostData();
             if (hostMeta) {
                 vnodeHostData = Object.keys(hostMeta).reduce(function (hostData, key) {
                     switch (key) {
@@ -1713,11 +1829,16 @@
             // kick off the actual render and any DOM updates
             elm._vnode = plt.render(oldVNode, h(null, vnodeHostData, vnodeChildren), isUpdateRender, elm._hostContentNodes);
         }
-        if (isUpdateRender) {
-            // fire off the user's componentDidUpdate method (if one was provided)
-            // componentDidUpdate runs AFTER render() has been called
-            // but only AFTER an UPDATE and not after the intial render
-            instance.componentDidUpdate && instance.componentDidUpdate();
+        // it's official, this element has rendered
+        elm._hasRendered = true;
+        if (elm._onRenderCallbacks) {
+            // ok, so turns out there are some child host elements
+            // waiting on this parent element to load
+            // let's fire off all update callbacks waiting
+            elm._onRenderCallbacks.forEach(function (cb) {
+                cb();
+            });
+            delete elm._onRenderCallbacks;
         }
     }
 
@@ -1734,7 +1855,14 @@
             disconnectedCallback(plt, this);
         };
         HostElementConstructor.componentOnReady = function (cb) {
+            var promise = void 0;
+            if (!cb) {
+                promise = new Promise(function (resolve) {
+                    cb = resolve;
+                });
+            }
             componentOnReady(this, cb);
+            return promise;
         };
         HostElementConstructor._queueUpdate = function () {
             queueUpdate(plt, this);
@@ -1743,7 +1871,7 @@
             initLoad(plt, this);
         };
         HostElementConstructor._render = function (isInitialRender) {
-            render(plt, this, isInitialRender);
+            render(plt, this, plt.getComponentMeta(this), isInitialRender);
         };
     }
     function componentOnReady(elm, cb) {
@@ -1775,14 +1903,10 @@
         } catch (e) {
             plt.onError(QUEUE_EVENTS_ERROR, e, elm);
         }
-        // fire off the user's componentWillLoad method (if one was provided)
-        // componentWillLoad only runs ONCE, after instance's element has been
-        // assigned as the host element, but BEFORE render() has been called
-        try {
-            instance.componentWillLoad && instance.componentWillLoad();
-        } catch (e) {
-            plt.onError(WILL_LOAD_ERROR, e, elm);
-        }
+        // Create a mutation observer that will identify changes to the elements
+        // children. When mutations occur rerender.  This only creates the observer
+        // it does not start observing.
+        createMutationObserver(plt, elm);
     }
     function initLoad(plt, elm) {
         var instance = elm.$instance;
@@ -1818,14 +1942,21 @@
             // ( •_•)
             // ( •_•)>⌐■-■
             // (⌐■_■)
-            // load events fire from bottom to top, the deepest elements first then bubbles up
-            // if this element did have an ancestor host element
-            if (elm._ancestorHostElement) {
-                // ok so this element already has a known ancestor host element
-                // let's make sure we remove this element from its ancestor's
-                // known list of child elements which are actively loading
-                var ancestorsActivelyLoadingChildren = elm._ancestorHostElement._activelyLoadingChildren;
-                var index = ancestorsActivelyLoadingChildren && ancestorsActivelyLoadingChildren.indexOf(elm);
+            // load events fire from bottom to top
+            // the deepest elements load first then bubbles up
+            propagateElementLoaded(elm);
+        }
+    }
+    function propagateElementLoaded(elm) {
+        // load events fire from bottom to top
+        // the deepest elements load first then bubbles up
+        if (elm._ancestorHostElement) {
+            // ok so this element already has a known ancestor host element
+            // let's make sure we remove this element from its ancestor's
+            // known list of child elements which are actively loading
+            var ancestorsActivelyLoadingChildren = elm._ancestorHostElement._activelyLoadingChildren;
+            if (ancestorsActivelyLoadingChildren) {
+                var index = ancestorsActivelyLoadingChildren.indexOf(elm);
                 if (index > -1) {
                     // yup, this element is in the list of child elements to wait on
                     // remove it so we can work to get the length down to 0
@@ -1836,9 +1967,9 @@
                 // then let's call the ancestor's initLoad method if there's no length
                 // (which actually ends up as this method again but for the ancestor)
                 !ancestorsActivelyLoadingChildren.length && elm._ancestorHostElement._initLoad();
-                // fuhgeddaboudit, no need to keep a reference after this element loaded
-                delete elm._ancestorHostElement;
             }
+            // fuhgeddaboudit, no need to keep a reference after this element loaded
+            delete elm._ancestorHostElement;
         }
     }
 
@@ -1851,7 +1982,9 @@
         var pendingModuleRequests = {};
         var controllerComponents = {};
         var domApi = createDomApi(doc);
-        var now = getNowFunction(win);
+        var now = function () {
+            return win.performance.now();
+        };
         // initialize Core global object
         Context.dom = createDomControllerClient(win, now);
         Context.addListener = function addListener(elm, eventName, cb, opts) {
@@ -1864,7 +1997,10 @@
             elm && elm.dispatchEvent(new WindowCustomEvent(Context.eventNameFn ? Context.eventNameFn(eventName) : eventName, data));
         };
         Context.isClient = true;
-        Context.isServer = false;
+        Context.isServer = Context.isPrerender = false;
+        Context.window = win;
+        Context.location = win.location;
+        Context.document = doc;
         // create the platform api which is used throughout common core code
         var plt = {
             registerComponents: registerComponents,
@@ -1877,13 +2013,15 @@
             connectHostElement: connectHostElement,
             emitEvent: Context.emit,
             getEventOptions: getEventOptions,
-            onError: onError
+            onError: onError,
+            isClient: true
         };
         // create the renderer that will be used
-        plt.render = createRenderer(plt, domApi);
+        plt.render = createRendererPatch(plt, domApi);
         // setup the root element which is the mighty <html> tag
         // the <html> has the final say of when the app has loaded
         var rootElm = domApi.$documentElement;
+        rootElm._hasRendered = true;
         rootElm._activelyLoadingChildren = [];
         rootElm._initLoad = function appLoadedCallback() {
             // this will fire when all components have finished loaded
@@ -2059,9 +2197,7 @@
             console.error(type, err, elm.tagName);
         }
         function propConnect(ctrlTag) {
-            var obj = {};
-            proxyControllerProp(domApi, controllerComponents, obj, ctrlTag, 'create');
-            return obj;
+            return proxyController(domApi, controllerComponents, ctrlTag);
         }
         function getContextItem(contextKey) {
             return Context[contextKey];
@@ -2075,4 +2211,4 @@
         plt.defineComponent(cmpMeta, class HostElement extends HTMLElement {});
     });
 })(window, document, Context, appNamespace, publicPath);
-})({},"App","build/app/");
+})({},"App","/build/app/");
