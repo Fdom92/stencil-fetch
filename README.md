@@ -48,6 +48,20 @@ method | 'GET' | The method for the request (GET, POST...)
 url | '' | The URL to make the request
 buttonLabel | Fetch | The button label
 
+## Events
+
+You can listen for the `resolved` or `error` events like:
+
+> myComponent.addEventListener('resolved', function() {console.log('done')})
+
+### Resolved
+
+This event will be emitted when all goes OK
+
+### Error
+
+This event will be emitted when an error ocurred
+
 ## Example
 
 `<st-fetch url="https://jsonplaceholder.typicode.com/posts"></st-fetch>`
