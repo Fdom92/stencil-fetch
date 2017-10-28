@@ -1,4 +1,6 @@
 exports.config = {
+  namespace: 'fetch',
+  generateDistribution: true,
   bundles: [
     { components: ['st-fetch'] }
   ]

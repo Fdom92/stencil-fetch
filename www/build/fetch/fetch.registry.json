@@ -1,0 +1,45 @@
+{
+  "namespace": "fetch",
+  "components": [
+    [
+      "st-fetch",
+      "qdeh8r7x",
+      0,
+      [
+        [
+          "available",
+          5
+        ],
+        [
+          "buttonLabel",
+          1,
+          1,
+          2
+        ],
+        [
+          "headers",
+          1
+        ],
+        [
+          "method",
+          1,
+          1,
+          2
+        ],
+        [
+          "request",
+          5
+        ],
+        [
+          "url",
+          1,
+          1,
+          2
+        ]
+      ]
+    ]
+  ],
+  "loader": "../fetch.js",
+  "core": "fetch.ifuywb22.js",
+  "corePolyfilled": "fetch.yhacfjei.pf.js"
+}

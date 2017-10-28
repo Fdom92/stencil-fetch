@@ -26,11 +26,13 @@ declare global {
   }
   namespace JSXElements {
       export interface StFetchAttributes extends HTMLAttributes {
+          mode?: string,
+          color?: string,
         
           headers?: any,
-          method?: any,
-          url?: any,
-          buttonLabel?: any
+          method?: string,
+          url?: string,
+          buttonLabel?: string
       }
   }
 }

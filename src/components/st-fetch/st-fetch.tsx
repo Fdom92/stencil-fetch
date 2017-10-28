@@ -8,11 +8,11 @@ export class StFetch {
 
   @Prop() headers     : object = {};
   @Prop() method      : string = 'GET';
-  @Prop() url         : string;
+  @Prop() url         : string = '';
   @Prop() buttonLabel : string = 'Fetch';
 
-  @Event() fetchResolved : EventEmitter;
-  @Event() fetchError    : EventEmitter;
+  @Event() resolved : EventEmitter;
+  @Event() error    : EventEmitter;
 
   @State() available : boolean = false;
   @State() request   : any;
@@ -32,10 +32,10 @@ export class StFetch {
   doFetch () {
     fetch(this.request)
       .then(function(response) {
-        this.fetchResolved.emit(response);
+        this.resolved.emit(response);
       }.bind(this))
       .catch(function(err) {
-        this.fetchError.emit(err);
+        this.error.emit(err);
       }.bind(this));
   }
 
