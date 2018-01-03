@@ -3,7 +3,10 @@
   "components": [
     [
       "st-fetch",
-      "qdeh8r7x",
+      [
+        "jrkxpy2x",
+        "stq2agql"
+      ],
       0,
       [
         [
@@ -18,6 +21,8 @@
         ],
         [
           "headers",
+          1,
+          1,
           1
         ],
         [
@@ -39,7 +44,7 @@
       ]
     ]
   ],
-  "loader": "../fetch.js",
-  "core": "fetch.ifuywb22.js",
-  "corePolyfilled": "fetch.yhacfjei.pf.js"
+  "core": "fetch.anhupqok.js",
+  "coreSsr": "fetch.v67vgvfw.js",
+  "corePolyfilled": "fetch.1tclxjuc.js"
 }

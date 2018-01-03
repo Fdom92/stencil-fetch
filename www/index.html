@@ -8,7 +8,7 @@
   <meta name="msapplication-tap-highlight" content="no">
   <meta name="theme-color" content="black">
 
-  <script src="build/app.js"></script>
+  <script src="build/fetch.js"></script>
 
 </head>
 <body>
@@ -18,10 +18,22 @@
 
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      window.addEventListener('load', () => {
+      window.addEventListener('load', function(){
         navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('service worker registered', reg))
-          .catch(err => console.log('service worker error', err));
+          .then(function(reg) {
+            console.log('service worker registered', reg);
+
+            reg.onupdatefound = function() {
+              var installingWorker = reg.installing;
+
+              installingWorker.onstatechange = function() {
+                if (installingWorker.state === 'installed') {
+                  window.dispatchEvent(new Event('swUpdate'))
+                }
+              }
+            }
+          })
+          .catch(function(err) { console.log('service worker error', err) });
       });
     }
   </script>

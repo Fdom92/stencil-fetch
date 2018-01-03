@@ -6,10 +6,10 @@ import { Component, Prop, EventEmitter, Event, State } from '@stencil/core';
 })
 export class StFetch {
 
-  @Prop() headers     : object = {};
-  @Prop() method      : string = 'GET';
-  @Prop() url         : string = '';
-  @Prop() buttonLabel : string = 'Fetch';
+  @Prop() headers     : Headers = new Headers();
+  @Prop() method      : string  = 'GET';
+  @Prop() url         : string  = '';
+  @Prop() buttonLabel : string  = 'Fetch';
 
   @Event() resolved : EventEmitter;
   @Event() error    : EventEmitter;

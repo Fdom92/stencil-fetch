@@ -1,4 +1,4 @@
-importScripts('workbox-sw.prod.v2.1.0.js');
+importScripts('workbox-sw.prod.v2.1.2.js');
 
 /**
  * DO NOT EDIT THE FILE MANIFEST ENTRY
@@ -20,23 +20,31 @@ importScripts('workbox-sw.prod.v2.1.0.js');
 const fileManifest = [
   {
     "url": "build/fetch.js",
-    "revision": "aa681425c4d4a0046048e07375c02511"
+    "revision": "8e98204f0f02abe9fb27c87d437819ea"
   },
   {
-    "url": "build/fetch/fetch.ifuywb22.js",
-    "revision": "e1c2b8c865c1cd6b302032204a2111a6"
+    "url": "build/fetch/fetch.1tclxjuc.js",
+    "revision": "9a61738b748a0e258fee3da25a2f8d45"
+  },
+  {
+    "url": "build/fetch/fetch.anhupqok.js",
+    "revision": "a12222053b709ab2e4bb13955b0b0e90"
   },
   {
     "url": "build/fetch/fetch.registry.json",
-    "revision": "11ad43d496d041b9d5f4b585864bb054"
+    "revision": "86251279dc80c0bbe943808bc3d2a04a"
   },
   {
-    "url": "build/fetch/fetch.yhacfjei.pf.js",
-    "revision": "60affa0f499ffc805f86dee09952ad44"
+    "url": "build/fetch/fetch.v67vgvfw.js",
+    "revision": "b0d0e8d3db96ac1040149f7358a11a17"
   },
   {
-    "url": "build/fetch/qdeh8r7x.js",
-    "revision": "bb5365dd3a33f52999fb26568d345537"
+    "url": "build/fetch/jrkxpy2x.js",
+    "revision": "f4cd14cb113ec79b4e9139f3a3088e54"
+  },
+  {
+    "url": "build/fetch/stq2agql.js",
+    "revision": "28078af1ad2b94c0ef50c29c2f79f7eb"
   },
   {
     "url": "favicon.ico",
@@ -44,7 +52,11 @@ const fileManifest = [
   },
   {
     "url": "index.html",
-    "revision": "618e5ab9a67384abb0fca642e381d1dd"
+    "revision": "11f717eea55fbcd80e77df8368604aa8"
+  },
+  {
+    "url": "workbox-sw.prod.v2.1.0.js",
+    "revision": "e5f207838d7fd9c81835d5705a73cfa2"
   }
 ];
 
