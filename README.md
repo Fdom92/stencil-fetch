@@ -48,6 +48,14 @@ method | 'GET' | The method for the request (GET, POST...)
 url | '' | The URL to make the request
 buttonLabel | Fetch | The button label
 
+## Methods
+
+You can make the request anytime with the method `makeRequest` like this:
+```js
+element = document.querySelector('st-fetch');
+element.makeRequest();
+```
+
 ## Events
 
 You can listen for the `resolved` or `error` events like:
