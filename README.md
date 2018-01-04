@@ -52,16 +52,35 @@ buttonLabel | Fetch | The button label
 
 You can listen for the `resolved` or `error` events like:
 
-> myComponent.addEventListener('resolved', function() {console.log('done')})
+```js
+element = document.querySelector('st-fetch');
+element.addEventListener('resolved', function(e){console.log(e);})
+```
+And you will see the event on the console after ok or error.
 
-### Resolved
+### resolved
 
 This event will be emitted when all goes OK
 
-### Error
+### error
 
 This event will be emitted when an error ocurred
 
 ## Example
 
+After addingthis to your code:
+
 `<st-fetch url="https://jsonplaceholder.typicode.com/posts"></st-fetch>`
+
+You can do this to make a request and get the event:
+
+```js
+element = document.querySelector('st-fetch');
+element.addEventListener('resolved', function(event){
+    // Do whatever you want with the event
+});
+element.addEventListener('error', function(event){
+    // Do whatever you want with the event
+});
+element.makeRequest();
+```

@@ -1,4 +1,4 @@
-import { Component, Prop, EventEmitter, Event, State } from '@stencil/core';
+import { Component, Prop, EventEmitter, Event, State, Method } from '@stencil/core';
 
 
 @Component({
@@ -29,24 +29,20 @@ export class StFetch {
     }
   }
 
-  doFetch () {
-    fetch(this.request)
+  @Method()
+  makeRequest () {
+    if(this.available) {
+      fetch(this.request)
       .then(function(response) {
         this.resolved.emit(response);
       }.bind(this))
       .catch(function(err) {
         this.error.emit(err);
       }.bind(this));
+    }
   }
 
   render() {
-    return this.available &&
-    (
-      <div>
-        <button onClick={() => this.doFetch()}>
-          <span>{this.buttonLabel}</span>
-        </button>
-      </div>
-    );
+    return;
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "stencil-fetch",
-  "version": "0.1.0",
+  "version": "0.0.3",
   "description": "Web Component built with Stencil to use Fetch API",
   "main": "dist/fetch.js",
   "types": "dist/types/components.d.ts",

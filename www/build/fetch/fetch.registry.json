@@ -4,8 +4,8 @@
     [
       "st-fetch",
       [
-        "jrkxpy2x",
-        "stq2agql"
+        "st-fetch",
+        null
       ],
       0,
       [
@@ -26,6 +26,10 @@
           1
         ],
         [
+          "makeRequest",
+          6
+        ],
+        [
           "method",
           1,
           1,
@@ -44,7 +48,7 @@
       ]
     ]
   ],
-  "core": "fetch.anhupqok.js",
-  "coreSsr": "fetch.v67vgvfw.js",
-  "corePolyfilled": "fetch.1tclxjuc.js"
+  "core": "fetch.core.js",
+  "coreSsr": "fetch.core.ssr.js",
+  "corePolyfilled": "es5-build-disabled.js"
 }
