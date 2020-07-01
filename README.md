@@ -2,7 +2,7 @@
 
 # stencil-fetch
 
-st-voice2text is a web component built with [Stencil](https://stenciljs.com/) that allows you to use the [Fetch API](https://developers.google.com/web/updates/2015/03/introduction-to-fetch).
+stencil-fetch is a web component built with [Stencil](https://stenciljs.com/) that allows you to use the [Fetch API](https://developers.google.com/web/updates/2015/03/introduction-to-fetch).
 
 ## Getting Started
 
